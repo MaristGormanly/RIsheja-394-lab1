@@ -6,6 +6,7 @@ import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
 import Statistics from './components/Statistics';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Reports from './components/Reports';
 
 const App = () => {
   return (
@@ -53,6 +54,14 @@ const AppContent = () => {
           element={
             <PrivateRoute>
               <Statistics />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <Reports />
             </PrivateRoute>
           }
         />

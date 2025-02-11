@@ -127,6 +127,24 @@ class TaskModel {
       throw new Error(`Error fetching task statistics: ${error.message}`);
     }
   }
+
+  static async deleteTask(taskId, userId) {
+    const query = {
+      text: `
+        DELETE FROM tasks 
+        WHERE id = $1 
+        AND (created_by = $2 OR assigned_to = $2)
+        RETURNING *`,
+      values: [taskId, userId],
+    };
+
+    try {
+      const { rows } = await db.query(query);
+      return rows[0];
+    } catch (error) {
+      throw new Error(`Error deleting task: ${error.message}`);
+    }
+  }
 }
 
 module.exports = TaskModel; 

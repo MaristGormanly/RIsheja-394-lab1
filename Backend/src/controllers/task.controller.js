@@ -62,6 +62,26 @@ class TaskController {
       res.status(500).json({ message: error.message });
     }
   }
+
+  static async deleteTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { userId } = req.body;
+
+      const deletedTask = await TaskModel.deleteTask(taskId, userId);
+      
+      if (!deletedTask) {
+        return res.status(404).json({ 
+          message: 'Task not found or you don\'t have permission to delete it' 
+        });
+      }
+
+      res.json({ message: 'Task deleted successfully', task: deletedTask });
+    } catch (error) {
+      console.error('Error in deleteTask:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = TaskController; 

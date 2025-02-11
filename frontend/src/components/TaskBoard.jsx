@@ -3,6 +3,7 @@ import { DragDropContext } from 'react-beautiful-dnd';
 import TaskColumn from './TaskColumn';
 import TaskForm from './TaskForm';
 import { useAuth } from '../contexts/AuthContext';
+import TaskDetailsModal from './TaskDetailsModal';
 
 const TaskBoard = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -12,6 +13,7 @@ const TaskBoard = () => {
     'COMPLETED': []
   });
   const { userProfile } = useAuth();
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Fetch tasks when component mounts
   useEffect(() => {
@@ -107,6 +109,16 @@ const TaskBoard = () => {
     }
   };
 
+  const handleTaskDeleted = (taskId) => {
+    setTasks(prev => {
+      const newTasks = { ...prev };
+      Object.keys(newTasks).forEach(status => {
+        newTasks[status] = newTasks[status].filter(task => task.id !== taskId);
+      });
+      return newTasks;
+    });
+  };
+
   return (
     <div className="h-full">
       <div className="flex justify-between items-center mb-6">
@@ -136,6 +148,14 @@ const TaskBoard = () => {
         <TaskForm
           onClose={() => setShowTaskForm(false)}
           onTaskCreated={handleTaskCreated}
+        />
+      )}
+
+      {selectedTask && (
+        <TaskDetailsModal
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onTaskDeleted={handleTaskDeleted}
         />
       )}
     </div>

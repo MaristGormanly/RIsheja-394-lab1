@@ -6,5 +6,6 @@ router.post('/', TaskController.createTask);
 router.get('/user/:userId', TaskController.getUserTasks);
 router.patch('/:taskId/status', TaskController.updateTaskStatus);
 router.get('/statistics/:userId', TaskController.getTaskStatistics);
+router.delete('/:taskId', TaskController.deleteTask);
 
 module.exports = router; 

@@ -27,7 +27,8 @@ CREATE TABLE task_comments (
     task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id),
     comment TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    parent_comment_id INTEGER REFERENCES task_comments(id)
 );
 
 -- Task activity log to track all changes
