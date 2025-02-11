@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import TaskBoard from './components/TaskBoard';
 import LoginPage from './components/auth/LoginPage';
 import SignupPage from './components/auth/SignupPage';
+import Statistics from './components/Statistics';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const App = () => {
@@ -21,7 +22,7 @@ const AppContent = () => {
     return currentUser ? (
       <div className="flex h-screen bg-gray-50">
         <Sidebar />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 overflow-auto">
           {children}
         </main>
       </div>
@@ -44,6 +45,14 @@ const AppContent = () => {
           element={
             <PrivateRoute>
               <TaskBoard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/statistics"
+          element={
+            <PrivateRoute>
+              <Statistics />
             </PrivateRoute>
           }
         />

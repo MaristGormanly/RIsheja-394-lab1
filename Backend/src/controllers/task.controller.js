@@ -51,6 +51,17 @@ class TaskController {
       res.status(500).json({ message: error.message });
     }
   }
+
+  static async getTaskStatistics(req, res) {
+    try {
+      const { userId } = req.params;
+      const statistics = await TaskModel.getTaskStatistics(userId);
+      res.json(statistics);
+    } catch (error) {
+      console.error('Error in getTaskStatistics:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = TaskController; 

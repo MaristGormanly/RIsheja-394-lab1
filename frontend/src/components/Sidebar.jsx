@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = () => {
@@ -24,24 +24,36 @@ const Sidebar = () => {
       <nav className="flex-1">
         <ul className="space-y-2">
           <li>
-            <a href="#" className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+            <Link 
+              to="/" 
+              className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+            >
               <span>Dashboard</span>
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="#" className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
-              <span>My Tasks</span>
-            </a>
+            <Link 
+              to="/statistics" 
+              className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+            >
+              <span>Statistics</span>
+            </Link>
           </li>
           <li>
-            <a href="#" className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+            <Link 
+              to="/team" 
+              className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+            >
               <span>Team</span>
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="#" className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100">
+            <Link 
+              to="/reports" 
+              className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
+            >
               <span>Reports</span>
-            </a>
+            </Link>
           </li>
         </ul>
       </nav>
