@@ -2,7 +2,8 @@ const API_BASE_URL = 'http://localhost:3001/api'; // adjust to match your backen
 
 export const createUserInDatabase = async (email, name) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users`, {
+    console.log('Attempting to create user:', { email, name });
+    const response = await fetch(`${API_BASE_URL}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -10,12 +11,13 @@ export const createUserInDatabase = async (email, name) => {
       body: JSON.stringify({ email, name }),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create user in database');
+      throw new Error(data.message || 'Failed to create user in database');
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error('Error creating user in database:', error);
     throw error;
@@ -24,12 +26,16 @@ export const createUserInDatabase = async (email, name) => {
 
 export const getUserData = async (email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/email/${email}`);
+    console.log('Fetching user data for:', email);
+    const response = await fetch(`${API_BASE_URL}/email/${email}`);
+    
+    const data = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch user data');
+      throw new Error(data.message || 'Failed to fetch user data');
     }
-    return await response.json();
+
+    return data;
   } catch (error) {
     console.error('Error fetching user data:', error);
     throw error;

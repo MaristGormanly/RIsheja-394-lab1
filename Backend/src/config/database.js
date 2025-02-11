@@ -1,32 +1,21 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
-
 const pool = new Pool({
-  connectionString: connectionString,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
 });
 
-// Test the connection
-const testConnection = async () => {
-  try {
-    const client = await pool.connect();
-    console.log('Database connected successfully');
-    client.release();
-  } catch (err) {
-    console.error('Database connection error:', {
-      message: err.message,
-      stack: err.stack,
-      details: {
-        connectionString: connectionString.replace(
-          process.env.DB_PASSWORD,
-          '****'
-        ),
-      }
-    });
-  }
-};
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
 
-testConnection();
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
 
 module.exports = pool; 

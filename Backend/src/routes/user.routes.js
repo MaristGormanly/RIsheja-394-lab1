@@ -3,7 +3,7 @@ const UserController = require('../controllers/user.controller');
 const router = express.Router();
 const UserModel = require('../models/user.model');
 
-router.post('/users', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { email, name } = req.body;
     
@@ -19,7 +19,7 @@ router.post('/users', async (req, res) => {
   }
 });
 
-router.get('/users/email/:email', async (req, res) => {
+router.get('/email/:email', async (req, res) => {
   try {
     const { email } = req.params;
     const user = await UserModel.getUserByEmail(email);

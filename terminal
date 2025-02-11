@@ -3,3 +3,8 @@ rm -rf node_modules package-lock.json
 npm install react-router-dom
 npm install
 npm start
+
+cd Backend
+rm -rf node_modules package-lock.json
+npm install cors
+npm start
