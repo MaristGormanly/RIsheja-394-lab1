@@ -7,6 +7,7 @@ import SignupPage from './components/auth/SignupPage';
 import Statistics from './components/Statistics';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Reports from './components/Reports';
+import Orion from './components/Orion';
 
 const App = () => {
   return (
@@ -62,6 +63,14 @@ const AppContent = () => {
           element={
             <PrivateRoute>
               <Reports />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/orion"
+          element={
+            <PrivateRoute>
+              <Orion />
             </PrivateRoute>
           }
         />

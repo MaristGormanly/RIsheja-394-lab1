@@ -24,20 +24,21 @@ const TaskBoard = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/tasks/user/${userProfile.id}`);
-      const data = await response.json();
+      const response = await fetch(`http://localhost:3001/api/tasks/user/${userProfile.email}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const tasks = await response.json();
       
       // Group tasks by status
-      const groupedTasks = data.reduce((acc, task) => {
-        if (!acc[task.status]) {
-          acc[task.status] = [];
-        }
-        acc[task.status].push(task);
-        return acc;
-      }, {
+      const groupedTasks = {
         'TO_DO': [],
         'IN_PROGRESS': [],
         'COMPLETED': []
+      };
+
+      tasks.forEach(task => {
+        groupedTasks[task.status].push(task);
       });
 
       setTasks(groupedTasks);
@@ -120,7 +121,7 @@ const TaskBoard = () => {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">My Tasks</h2>
         <button
@@ -132,11 +133,11 @@ const TaskBoard = () => {
       </div>
       
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-6 h-[calc(100%-5rem)]">
+        <div className="flex gap-6 flex-1 min-h-0">
           {Object.entries(tasks).map(([status, taskList]) => (
             <TaskColumn 
               key={status} 
-              title={status} 
+              title={status.replace('_', ' ')} 
               tasks={taskList} 
               droppableId={status}
             />

@@ -7,6 +7,7 @@ require('dotenv').config();
 const userRoutes = require('./routes/user.routes');
 const taskRoutes = require('./routes/task.routes');
 const commentRoutes = require('./routes/comment.routes');
+const aiRoutes = require('./routes/ai.routes');
 //const taskCommentRoutes = require('./routes/taskComment.routes');
 //const taskActivityRoutes = require('./routes/taskActivity.routes');
 
@@ -36,6 +37,7 @@ app.get('/health', (req, res) => {
 app.use('/api', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api', commentRoutes);
+app.use('/api/ai', aiRoutes);
 //app.use('/api/comments', taskCommentRoutes);
 //app.use('/api/activity', taskActivityRoutes);
 

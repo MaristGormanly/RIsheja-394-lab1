@@ -7,8 +7,8 @@ class TaskController {
         title: req.body.title,
         description: req.body.description,
         priority: req.body.priority,
-        created_by: req.body.created_by,
-        assigned_to: req.body.assigned_to
+        creator_email: req.body.creator_email,
+        assignee_email: req.body.assignee_email
       };
 
       const task = await TaskModel.createTask(taskData);
@@ -21,8 +21,8 @@ class TaskController {
 
   static async getUserTasks(req, res) {
     try {
-      const userId = req.params.userId;
-      const tasks = await TaskModel.getTasksByUser(userId);
+      const userEmail = req.params.email;
+      const tasks = await TaskModel.getTasksByEmail(userEmail);
       res.json(tasks);
     } catch (error) {
       console.error('Error in getUserTasks:', error);
@@ -79,6 +79,21 @@ class TaskController {
       res.json({ message: 'Task deleted successfully', task: deletedTask });
     } catch (error) {
       console.error('Error in deleteTask:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async createBatchTasks(req, res) {
+    try {
+      const { tasks } = req.body;
+      
+      const createdTasks = await Promise.all(
+        tasks.map(task => TaskModel.createTask(task))
+      );
+
+      res.status(201).json(createdTasks);
+    } catch (error) {
+      console.error('Error in createBatchTasks:', error);
       res.status(500).json({ message: error.message });
     }
   }

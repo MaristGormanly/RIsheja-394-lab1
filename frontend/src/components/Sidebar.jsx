@@ -41,10 +41,10 @@ const Sidebar = () => {
           </li>
           <li>
             <Link 
-              to="/team" 
+              to="/orion" 
               className="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
             >
-              <span>Team</span>
+              <span>Orion</span>
             </Link>
           </li>
           <li>

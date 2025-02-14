@@ -2,10 +2,16 @@ const db = require('../config/database');
 
 class TaskModel {
   static async createTask(taskData) {
-    const { title, description, priority, created_by, assigned_to } = taskData;
+    const { title, description, priority, creator_email, assignee_email } = taskData;
     
     const query = {
       text: `
+        WITH creator AS (
+          SELECT id FROM users WHERE email = $1
+        ),
+        assignee AS (
+          SELECT id FROM users WHERE email = $2
+        )
         INSERT INTO tasks (
           title, 
           description, 
@@ -14,15 +20,19 @@ class TaskModel {
           created_by, 
           assigned_to
         ) 
-        VALUES ($1, $2, $3, $4, $5, $6) 
+        SELECT 
+          $3, $4, 'TO_DO', $5, 
+          creator.id,
+          assignee.id
+        FROM creator
+        LEFT JOIN assignee ON true
         RETURNING *`,
       values: [
-        title, 
-        description, 
-        'TO_DO', // Default status for new tasks
-        priority,
-        created_by,
-        assigned_to
+        creator_email,
+        assignee_email || null,
+        title,
+        description,
+        priority
       ],
     };
 
@@ -44,7 +54,7 @@ class TaskModel {
         LEFT JOIN users c ON t.created_by = c.id
         LEFT JOIN users a ON t.assigned_to = a.id
         WHERE t.created_by = $1 OR t.assigned_to = $1
-        ORDER BY t.created_at DESC`,
+        ORDER BY t.created_at ASC`,
       values: [userId],
     };
 
@@ -143,6 +153,30 @@ class TaskModel {
       return rows[0];
     } catch (error) {
       throw new Error(`Error deleting task: ${error.message}`);
+    }
+  }
+
+  static async getTasksByEmail(email) {
+    const query = {
+      text: `
+        SELECT t.*, 
+          c.name as creator_name,
+          c.email as creator_email,
+          a.name as assignee_name,
+          a.email as assignee_email
+        FROM tasks t
+        LEFT JOIN users c ON t.created_by = c.id
+        LEFT JOIN users a ON t.assigned_to = a.id
+        WHERE c.email = $1 OR a.email = $1
+        ORDER BY t.created_at ASC`,
+      values: [email],
+    };
+
+    try {
+      const { rows } = await db.query(query);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error fetching tasks: ${error.message}`);
     }
   }
 }
