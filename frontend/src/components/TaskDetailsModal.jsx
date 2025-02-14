@@ -2,13 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 
-const TaskDetailsModal = ({ task, onClose, onTaskDeleted }) => {
+const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
   const { userProfile } = useAuth();
+  const [task, setTask] = useState(initialTask);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState('');
+  const [editForm, setEditForm] = useState({
+    assignee_email: task.assignee_email || '',
+    description: task.description
+  });
 
   useEffect(() => {
     fetchComments();
@@ -50,6 +57,35 @@ const TaskDetailsModal = ({ task, onClose, onTaskDeleted }) => {
       setNewComment('');
     } catch (error) {
       console.error('Error adding comment:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/tasks/${task.id}/assign`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          assignee_email: editForm.assignee_email || null,
+          description: editForm.description
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update task');
+
+      const updatedTask = await response.json();
+      setTask(updatedTask);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to update task. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -141,22 +177,95 @@ const TaskDetailsModal = ({ task, onClose, onTaskDeleted }) => {
             </button>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Description</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">
-                {task.description || 'No description provided'}
-              </p>
+            <div className="bg-gray-50 rounded-lg p-4">
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Assign To (Email)
+                    </label>
+                    <input
+                      type="email"
+                      value={editForm.assignee_email}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, assignee_email: e.target.value }))}
+                      placeholder="Enter email address"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Leave empty to unassign the task
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleEdit}
+                      disabled={loading}
+                      className="px-4 py-2 text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="whitespace-pre-wrap">{task.description}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Assigned to:</span>
+                        <span className="text-sm font-medium">
+                          {task.assignee_email || 'Unassigned'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Created by:</span>
+                        <span className="text-sm font-medium">{task.creator_email}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Created:</span>
+                        <span className="text-sm">
+                          {format(new Date(task.created_at), 'MMM d, yyyy')}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm"
+                    >
+                      Edit Task
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Created by</h3>
                 <p className="text-gray-700">{task.creator_name}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Assigned to</h3>
-                <p className="text-gray-700">{task.assignee_name || 'Unassigned'}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Created at</h3>
@@ -166,14 +275,13 @@ const TaskDetailsModal = ({ task, onClose, onTaskDeleted }) => {
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Last updated</h3>
                 <p className="text-gray-700">{formatDate(task.updated_at)}</p>
               </div>
+              {task.status === 'COMPLETED' && task.completed_at && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 mb-1">Completed at</h3>
+                  <p className="text-gray-700">{formatDate(task.completed_at)}</p>
+                </div>
+              )}
             </div>
-
-            {task.status === 'COMPLETED' && task.completed_at && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Completed at</h3>
-                <p className="text-gray-700">{formatDate(task.completed_at)}</p>
-              </div>
-            )}
           </div>
 
           {/* Comments Section */}

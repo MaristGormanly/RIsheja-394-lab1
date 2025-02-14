@@ -97,6 +97,27 @@ class TaskController {
       res.status(500).json({ message: error.message });
     }
   }
+
+  static async updateTaskAssignment(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { assignee_email, description } = req.body;
+
+      const task = await TaskModel.updateTaskAssignment(taskId, { 
+        assignee_email, 
+        description 
+      });
+      
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+
+      res.json(task);
+    } catch (error) {
+      console.error('Error in updateTaskAssignment:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
 }
 
 module.exports = TaskController; 

@@ -179,6 +179,30 @@ class TaskModel {
       throw new Error(`Error fetching tasks: ${error.message}`);
     }
   }
+
+  static async updateTaskAssignment(taskId, { assignee_email, description }) {
+    const query = {
+      text: `
+        WITH assignee AS (
+          SELECT id FROM users WHERE email = $1
+        )
+        UPDATE tasks 
+        SET 
+          assigned_to = (SELECT id FROM assignee),
+          description = $2,
+          updated_at = CURRENT_TIMESTAMP 
+        WHERE id = $3 
+        RETURNING *`,
+      values: [assignee_email || null, description, taskId],
+    };
+
+    try {
+      const { rows } = await db.query(query);
+      return rows[0];
+    } catch (error) {
+      throw new Error(`Error updating task assignment: ${error.message}`);
+    }
+  }
 }
 
 module.exports = TaskModel; 
