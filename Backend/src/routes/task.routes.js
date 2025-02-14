@@ -9,5 +9,6 @@ router.get('/statistics/:userId', TaskController.getTaskStatistics);
 router.delete('/:taskId', TaskController.deleteTask);
 router.post('/batch', TaskController.createBatchTasks);
 router.patch('/:taskId/assign', TaskController.updateTaskAssignment);
+router.post('/:taskId/share', TaskController.shareTask);
 
 module.exports = router; 

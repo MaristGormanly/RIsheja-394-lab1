@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
+import ShareTaskModal from './ShareTaskModal';
 
 const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
   const { userProfile } = useAuth();
@@ -16,6 +17,7 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
     assignee_email: task.assignee_email || '',
     description: task.description
   });
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     fetchComments();
@@ -251,12 +253,20 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="text-indigo-600 hover:text-indigo-800 text-sm"
-                    >
-                      Edit Task
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowShareModal(true)}
+                        className="text-indigo-600 hover:text-indigo-800 text-sm"
+                      >
+                        Share Task
+                      </button>
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="text-indigo-600 hover:text-indigo-800 text-sm"
+                      >
+                        Edit Task
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -338,6 +348,13 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {showShareModal && (
+        <ShareTaskModal
+          task={task}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
     </div>
   );

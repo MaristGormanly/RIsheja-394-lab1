@@ -4,9 +4,11 @@ import TaskColumn from './TaskColumn';
 import TaskForm from './TaskForm';
 import { useAuth } from '../contexts/AuthContext';
 import TaskDetailsModal from './TaskDetailsModal';
+import ShareProjectModal from './ShareProjectModal';
 
 const TaskBoard = () => {
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showShareProject, setShowShareProject] = useState(false);
   const [tasks, setTasks] = useState({
     'TO_DO': [],
     'IN_PROGRESS': [],
@@ -124,12 +126,20 @@ const TaskBoard = () => {
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold">My Tasks</h2>
-        <button
-          onClick={() => setShowTaskForm(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-        >
-          + Add New Task
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowShareProject(true)}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200"
+          >
+            Share Project
+          </button>
+          <button
+            onClick={() => setShowTaskForm(true)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+          >
+            + Add New Task
+          </button>
+        </div>
       </div>
       
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -157,6 +167,12 @@ const TaskBoard = () => {
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onTaskDeleted={handleTaskDeleted}
+        />
+      )}
+
+      {showShareProject && (
+        <ShareProjectModal
+          onClose={() => setShowShareProject(false)}
         />
       )}
     </div>
