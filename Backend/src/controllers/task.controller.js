@@ -1,4 +1,6 @@
 const TaskModel = require('../models/task.model');
+const emailService = require('../services/email.service');
+const UserModel = require('../models/user.model');
 
 class TaskController {
   static async createTask(req, res) {
@@ -8,10 +10,23 @@ class TaskController {
         description: req.body.description,
         priority: req.body.priority,
         creator_email: req.body.creator_email,
-        assignee_email: req.body.assignee_email
+        assignee_email: req.body.assignee_email,
+        project_id: req.body.project_id,
+        status: req.body.status
       };
 
       const task = await TaskModel.createTask(taskData);
+
+      // Send email notification if there's an assignee
+      if (taskData.assignee_email && taskData.assignee_email !== taskData.creator_email) {
+        const creator = await UserModel.getUserByEmail(taskData.creator_email);
+        await emailService.sendTaskInvitation(
+          taskData.assignee_email,
+          task,
+          creator.name
+        );
+      }
+
       res.status(201).json(task);
     } catch (error) {
       console.error('Error in createTask:', error);
@@ -21,8 +36,8 @@ class TaskController {
 
   static async getUserTasks(req, res) {
     try {
-      const userEmail = req.params.email;
-      const tasks = await TaskModel.getTasksByEmail(userEmail);
+      const { userId } = req.params;
+      const tasks = await TaskModel.getTasksByUser(userId);
       res.json(tasks);
     } catch (error) {
       console.error('Error in getUserTasks:', error);
@@ -122,7 +137,7 @@ class TaskController {
   static async shareTask(req, res) {
     try {
       const { taskId } = req.params;
-      const { email } = req.body;
+      const { email, creator_email } = req.body;
 
       const task = await TaskModel.updateTaskAssignment(taskId, { 
         assignee_email: email,
@@ -133,9 +148,50 @@ class TaskController {
         return res.status(404).json({ message: 'Task not found' });
       }
 
+      // Send email notification to the newly assigned user
+      if (email !== creator_email) {
+        const creator = await UserModel.getUserByEmail(creator_email);
+        await emailService.sendTaskInvitation(
+          email,
+          task,
+          creator.name
+        );
+      }
+
       res.json(task);
     } catch (error) {
       console.error('Error in shareTask:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async bulkDeleteTasks(req, res) {
+    try {
+      const { taskIds, userId } = req.body;
+      
+      if (!Array.isArray(taskIds) || taskIds.length === 0) {
+        return res.status(400).json({ message: 'No tasks specified for deletion' });
+      }
+
+      const deletedTasks = await TaskModel.bulkDeleteTasks(taskIds, userId);
+      
+      res.json({ 
+        message: 'Tasks deleted successfully', 
+        deletedCount: deletedTasks.length 
+      });
+    } catch (error) {
+      console.error('Error in bulkDeleteTasks:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async getProjectTasks(req, res) {
+    try {
+      const { projectId } = req.params;
+      const tasks = await TaskModel.getTasksByProject(projectId);
+      res.json(tasks);
+    } catch (error) {
+      console.error('Error in getProjectTasks:', error);
       res.status(500).json({ message: error.message });
     }
   }

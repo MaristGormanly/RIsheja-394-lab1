@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import ShareTaskModal from './ShareTaskModal';
+import GoogleCalendarButton from './GoogleCalendarButton';
+import { FaCalendarCheck } from 'react-icons/fa';
 
-const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
+const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate }) => {
   const { userProfile } = useAuth();
   const [task, setTask] = useState(initialTask);
   const [comments, setComments] = useState([]);
@@ -18,6 +20,7 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
     description: task.description
   });
   const [showShareModal, setShowShareModal] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(!!task?.google_calendar_event_id);
 
   useEffect(() => {
     fetchComments();
@@ -122,6 +125,11 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+  };
+
+  const handleCalendarDisconnect = () => {
+    setCalendarConnected(false);
+    onUpdate?.({ ...task, google_calendar_event_id: null });
   };
 
   return (
@@ -291,6 +299,24 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted }) => {
                   <p className="text-gray-700">{formatDate(task.completed_at)}</p>
                 </div>
               )}
+            </div>
+
+            {/* Add Calendar Integration UI */}
+            <div className="flex items-center justify-between py-2 border-t border-gray-200">
+              <span className="text-sm font-medium text-gray-700">Google Calendar</span>
+              <div className="flex items-center gap-2">
+                {calendarConnected && (
+                  <span className="flex items-center text-sm text-green-600">
+                    <FaCalendarCheck className="mr-1" />
+                    Synced
+                  </span>
+                )}
+                <GoogleCalendarButton
+                  taskId={task.id}
+                  isConnected={calendarConnected}
+                  onDisconnect={handleCalendarDisconnect}
+                />
+              </div>
             </div>
           </div>
 

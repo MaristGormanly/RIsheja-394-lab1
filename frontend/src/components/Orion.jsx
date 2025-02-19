@@ -1,27 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTask } from '../contexts/TaskContext';
 
-const TaskPreview = ({ task, onConfirm, onCancel }) => (
-  <div className="bg-white p-4 rounded-lg border border-gray-200">
-    <h3 className="font-medium text-lg mb-2">{task.title}</h3>
-    <p className="text-gray-600 mb-3">{task.description}</p>
-    <div className="flex items-center gap-3 mb-4">
-      <span className={`px-2 py-1 rounded-full text-xs ${
-        task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-        task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-        'bg-green-100 text-green-800'
-      }`}>
-        {task.priority}
-      </span>
-      <span className="text-gray-500 text-sm">
-        Estimated: {task.estimated_time} hours
-      </span>
+const TaskPreview = ({ task, onConfirm, onCancel }) => {
+  if (!task) return null;
+
+  return (
+    <div className="bg-white p-4 rounded-lg border border-gray-200">
+      <h3 className="font-medium text-lg mb-2">{task.title}</h3>
+      <p className="text-gray-600 mb-3">{task.description}</p>
+      <div className="flex items-center gap-3 mb-4">
+        <span className={`px-2 py-1 rounded-full text-xs ${
+          task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+          task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-green-100 text-green-800'
+        }`}>
+          {task.priority}
+        </span>
+        <span className="text-gray-500 text-sm">
+          Estimated: {task.estimated_time} hours
+        </span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Orion = () => {
   const { userProfile } = useAuth();
+  const { setTasks, fetchTasks } = useTask();
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -52,7 +58,7 @@ const Orion = () => {
         body: JSON.stringify({
           tasks: generatedTasks.map(task => ({
             ...task,
-            created_by: userProfile.id
+            creator_email: userProfile.email
           }))
         }),
       });
@@ -61,14 +67,8 @@ const Orion = () => {
         throw new Error('Failed to create tasks');
       }
 
-      const createdTasks = await response.json();
-      
-      setTasks(prev => ({
-        ...prev,
-        'TO_DO': [...prev['TO_DO'], ...createdTasks].sort((a, b) => 
-          new Date(a.created_at) - new Date(b.created_at)
-        )
-      }));
+      // Fetch all tasks to ensure consistency
+      await fetchTasks();
 
       setMessages(prev => [...prev, {
         role: 'assistant',
@@ -116,14 +116,32 @@ const Orion = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate tasks');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate tasks');
       }
 
       const data = await response.json();
-      setGeneratedTasks(data.tasks);
+      
+      if (!data.tasks || !Array.isArray(data.tasks)) {
+        throw new Error('No tasks received from the server');
+      }
+
+      const validTasks = data.tasks.filter(task => 
+        task && 
+        typeof task.title === 'string' && task.title.trim() !== '' &&
+        typeof task.description === 'string' && task.description.trim() !== '' &&
+        ['HIGH', 'MEDIUM', 'LOW'].includes(task.priority) &&
+        typeof task.estimated_time === 'number' && task.estimated_time > 0
+      );
+
+      if (validTasks.length === 0) {
+        throw new Error('No valid tasks were generated. Please try again with a more detailed description.');
+      }
+
+      setGeneratedTasks(validTasks);
       setShowConfirmation(true);
       
-      const taskList = data.tasks.map(task => 
+      const taskList = validTasks.map(task => 
         `• ${task.title} (${task.priority} priority, ${task.estimated_time}hrs)\n  ${task.description}`
       ).join('\n\n');
 
@@ -136,8 +154,10 @@ const Orion = () => {
       console.error('Error:', error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: "I apologize, but I encountered an error while generating tasks. Please try again."
+        content: `I apologize, but I encountered an error: ${error.message}. Please try describing your project in more detail.`
       }]);
+      setGeneratedTasks(null);
+      setShowConfirmation(false);
     } finally {
       setLoading(false);
     }
@@ -185,12 +205,12 @@ const Orion = () => {
         </div>
       </div>
 
-      {showConfirmation && generatedTasks && (
+      {showConfirmation && generatedTasks && generatedTasks.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h3 className="text-lg font-medium mb-4">Would you like to add these tasks to your dashboard?</h3>
           <div className="space-y-4 mb-6">
             {generatedTasks.map((task, index) => (
-              <TaskPreview key={index} task={task} />
+              task ? <TaskPreview key={index} task={task} /> : null
             ))}
           </div>
           <div className="flex justify-end gap-4">

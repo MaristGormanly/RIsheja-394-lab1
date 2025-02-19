@@ -3,6 +3,7 @@ const UserController = require('../controllers/user.controller');
 const router = express.Router();
 const UserModel = require('../models/user.model');
 
+// Create user
 router.post('/', async (req, res) => {
   try {
     const { email, name } = req.body;
@@ -19,10 +20,30 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Get user by email
 router.get('/email/:email', async (req, res) => {
   try {
     const { email } = req.params;
+    console.log('Looking up user by email:', email);
+    
     const user = await UserModel.getUserByEmail(email);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user by email:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get user by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.getUserById(id);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -35,6 +56,21 @@ router.get('/email/:email', async (req, res) => {
   }
 });
 
-router.get('/:id', UserController.getUserById);
+// Update user
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.updateUser(id, req.body);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router; 

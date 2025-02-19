@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-const ShareProjectModal = ({ onClose }) => {
+const ShareProjectModal = ({ onClose, projectId }) => {
+  const { userProfile } = useAuth();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -12,30 +13,34 @@ const ShareProjectModal = ({ onClose }) => {
 
   const handleShare = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !projectId) return;
     
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/projects/share', {
+      const response = await fetch(`http://localhost:3001/api/projects/${projectId}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email.trim()
+          email: email.trim(),
+          creator_email: userProfile.email
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to share project');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to share project');
+      }
 
       setSuccess(`Project shared with ${email}`);
       setEmail('');
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to share project. Please try again.');
+      setError(error.message || 'Failed to share project. Please try again.');
     } finally {
       setLoading(false);
     }

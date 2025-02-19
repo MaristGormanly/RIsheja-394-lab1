@@ -1,11 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 import TaskCard from './TaskCard';
 
-const TaskColumn = ({ title, tasks, droppableId }) => {
+const TaskColumn = ({ title, tasks, droppableId, onTaskSelect, selectedTasks, onTaskDeleted }) => {
+  const [isSelecting, setIsSelecting] = useState(false);
+
+  const handleSelectAll = () => {
+    const taskIds = tasks.map(task => task.id);
+    if (selectedTasks.length === tasks.length) {
+      // If all tasks are selected, deselect all
+      onTaskSelect(taskIds, false);
+    } else {
+      // Otherwise, select all
+      onTaskSelect(taskIds, true);
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-gray-100 rounded-lg p-4 min-h-[200px] max-h-[calc(100vh-12rem)] overflow-hidden">
-      <h3 className="font-medium mb-4 sticky top-0 bg-gray-100 z-10 py-2">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium text-gray-900">{title}</h3>
+          <span className="text-sm text-gray-500">({tasks.length})</span>
+        </div>
+        <button
+          onClick={() => setIsSelecting(!isSelecting)}
+          className="text-sm text-gray-600 hover:text-gray-900"
+        >
+          {isSelecting ? 'Cancel' : 'Select'}
+        </button>
+      </div>
+
+      {isSelecting && (
+        <div className="flex items-center gap-2 mb-3">
+          <input
+            type="checkbox"
+            checked={tasks.length > 0 && selectedTasks.length === tasks.length}
+            onChange={handleSelectAll}
+            className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+          />
+          <span className="text-sm text-gray-600">Select All</span>
+        </div>
+      )}
+
       <Droppable droppableId={droppableId}>
         {(provided, snapshot) => (
           <div
@@ -33,7 +70,14 @@ const TaskColumn = ({ title, tasks, droppableId }) => {
                         : 'none',
                     }}
                   >
-                    <TaskCard task={task} />
+                    <TaskCard
+                      task={task}
+                      index={index}
+                      isSelecting={isSelecting}
+                      isSelected={selectedTasks.includes(task.id)}
+                      onSelect={(selected) => onTaskSelect([task.id], selected)}
+                      onTaskDeleted={onTaskDeleted}
+                    />
                   </div>
                 )}
               </Draggable>

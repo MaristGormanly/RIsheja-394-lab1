@@ -2,7 +2,15 @@ const db = require('../config/database');
 
 class TaskModel {
   static async createTask(taskData) {
-    const { title, description, priority, creator_email, assignee_email } = taskData;
+    const { 
+      title, 
+      description, 
+      priority, 
+      creator_email, 
+      assignee_email, 
+      project_id,
+      status 
+    } = taskData;
     
     const query = {
       text: `
@@ -18,12 +26,14 @@ class TaskModel {
           status, 
           priority, 
           created_by, 
-          assigned_to
+          assigned_to,
+          project_id
         ) 
         SELECT 
-          $3, $4, 'TO_DO', $5, 
+          $3, $4, $5, $6, 
           creator.id,
-          assignee.id
+          assignee.id,
+          $7
         FROM creator
         LEFT JOIN assignee ON true
         RETURNING *`,
@@ -32,7 +42,9 @@ class TaskModel {
         assignee_email || null,
         title,
         description,
-        priority
+        status || 'TO_DO',
+        priority,
+        project_id
       ],
     };
 
@@ -49,11 +61,22 @@ class TaskModel {
       text: `
         SELECT t.*, 
           c.name as creator_name,
-          a.name as assignee_name
+          c.email as creator_email,
+          a.name as assignee_name,
+          a.email as assignee_email,
+          p.title as project_title
         FROM tasks t
         LEFT JOIN users c ON t.created_by = c.id
         LEFT JOIN users a ON t.assigned_to = a.id
-        WHERE t.created_by = $1 OR t.assigned_to = $1
+        LEFT JOIN projects p ON t.project_id = p.id
+        WHERE (t.created_by = $1 OR t.assigned_to = $1)
+        AND (
+          t.project_id IS NULL 
+          OR 
+          t.project_id IN (
+            SELECT id FROM projects WHERE created_by = $1
+          )
+        )
         ORDER BY t.created_at ASC`,
       values: [userId],
     };
@@ -156,53 +179,49 @@ class TaskModel {
     }
   }
 
-  static async getTasksByEmail(email) {
+  static async getTasksByProject(projectId) {
     const query = {
       text: `
         SELECT t.*, 
           c.name as creator_name,
           c.email as creator_email,
           a.name as assignee_name,
-          a.email as assignee_email
+          a.email as assignee_email,
+          p.title as project_title
         FROM tasks t
         LEFT JOIN users c ON t.created_by = c.id
         LEFT JOIN users a ON t.assigned_to = a.id
-        WHERE c.email = $1 OR a.email = $1
+        LEFT JOIN projects p ON t.project_id = p.id
+        WHERE t.project_id = $1
         ORDER BY t.created_at ASC`,
-      values: [email],
+      values: [projectId],
     };
 
     try {
       const { rows } = await db.query(query);
       return rows;
     } catch (error) {
-      throw new Error(`Error fetching tasks: ${error.message}`);
+      throw new Error(`Error fetching project tasks: ${error.message}`);
     }
   }
 
-  static async updateTaskAssignment(taskId, { assignee_email, description }) {
+  static async bulkDeleteTasks(taskIds, userId) {
     const query = {
       text: `
-        WITH assignee AS (
-          SELECT id FROM users WHERE email = $1
-        )
-        UPDATE tasks 
-        SET 
-          assigned_to = (SELECT id FROM assignee),
-          description = $2,
-          updated_at = CURRENT_TIMESTAMP 
-        WHERE id = $3 
+        DELETE FROM tasks 
+        WHERE id = ANY($1::int[])
+        AND (created_by = $2 OR assigned_to = $2)
         RETURNING *`,
-      values: [assignee_email || null, description, taskId],
+      values: [taskIds, userId],
     };
 
     try {
       const { rows } = await db.query(query);
-      return rows[0];
+      return rows;
     } catch (error) {
-      throw new Error(`Error updating task assignment: ${error.message}`);
+      throw new Error(`Error bulk deleting tasks: ${error.message}`);
     }
   }
 }
 
-module.exports = TaskModel; 
+module.exports = TaskModel;
