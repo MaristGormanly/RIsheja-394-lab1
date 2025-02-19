@@ -12,7 +12,8 @@ class TaskController {
         creator_email: req.body.creator_email,
         assignee_email: req.body.assignee_email,
         project_id: req.body.project_id,
-        status: req.body.status
+        status: req.body.status,
+        due_date: req.body.due_date
       };
 
       const task = await TaskModel.createTask(taskData);
@@ -192,6 +193,46 @@ class TaskController {
       res.json(tasks);
     } catch (error) {
       console.error('Error in getProjectTasks:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async updateTaskDueDate(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { due_date } = req.body;
+
+      const task = await TaskModel.updateTaskDueDate(taskId, due_date);
+      
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+
+      res.json(task);
+    } catch (error) {
+      console.error('Error in updateTaskDueDate:', error);
+      res.status(500).json({ message: error.message });
+    }
+  }
+
+  static async updateTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { assignee_email, description, due_date } = req.body;
+
+      const task = await TaskModel.updateTask(taskId, {
+        assignee_email,
+        description,
+        due_date
+      });
+      
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+
+      res.json(task);
+    } catch (error) {
+      console.error('Error in updateTask:', error);
       res.status(500).json({ message: error.message });
     }
   }

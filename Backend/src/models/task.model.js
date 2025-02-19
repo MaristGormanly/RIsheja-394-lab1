@@ -9,7 +9,8 @@ class TaskModel {
       creator_email, 
       assignee_email, 
       project_id,
-      status 
+      status,
+      due_date 
     } = taskData;
     
     const query = {
@@ -27,13 +28,17 @@ class TaskModel {
           priority, 
           created_by, 
           assigned_to,
-          project_id
+          project_id,
+          due_date,
+          assigned_at
         ) 
         SELECT 
           $3, $4, $5, $6, 
           creator.id,
           assignee.id,
-          $7
+          $7,
+          $8,
+          CASE WHEN assignee.id IS NOT NULL THEN CURRENT_TIMESTAMP END
         FROM creator
         LEFT JOIN assignee ON true
         RETURNING *`,
@@ -44,7 +49,8 @@ class TaskModel {
         description,
         status || 'TO_DO',
         priority,
-        project_id
+        project_id,
+        due_date
       ],
     };
 
@@ -77,7 +83,13 @@ class TaskModel {
             SELECT id FROM projects WHERE created_by = $1
           )
         )
-        ORDER BY t.created_at ASC`,
+        ORDER BY 
+          CASE 
+            WHEN t.due_date IS NOT NULL THEN 0 
+            ELSE 1 
+          END,
+          t.due_date ASC NULLS LAST,
+          t.created_at DESC`,
       values: [userId],
     };
 
@@ -94,7 +106,11 @@ class TaskModel {
       text: `
         UPDATE tasks 
         SET status = $1, 
-            updated_at = CURRENT_TIMESTAMP 
+            updated_at = CURRENT_TIMESTAMP,
+            completed_at = CASE 
+              WHEN $1 = 'COMPLETED' THEN CURRENT_TIMESTAMP
+              ELSE NULL
+            END
         WHERE id = $2 
         RETURNING *`,
       values: [status, taskId],
@@ -105,6 +121,55 @@ class TaskModel {
       return rows[0];
     } catch (error) {
       throw new Error(`Error updating task status: ${error.message}`);
+    }
+  }
+
+  static async updateTask(taskId, { assignee_email, description, due_date }) {
+    const query = {
+      text: `
+        WITH assignee AS (
+          SELECT id FROM users WHERE email = $1
+          UNION ALL
+          SELECT NULL WHERE $1 IS NULL
+          LIMIT 1
+        )
+        UPDATE tasks 
+        SET assigned_to = assignee.id,
+            description = $2,
+            due_date = $3,
+            updated_at = CURRENT_TIMESTAMP,
+            assigned_at = CASE 
+              WHEN assignee.id IS NOT NULL AND (assigned_to IS NULL OR assigned_to != assignee.id)
+              THEN CURRENT_TIMESTAMP
+              ELSE assigned_at
+            END
+        FROM assignee
+        WHERE tasks.id = $4 
+        RETURNING tasks.*, 
+          (SELECT name FROM users WHERE id = tasks.assigned_to) as assignee_name,
+          (SELECT email FROM users WHERE id = tasks.assigned_to) as assignee_email`,
+      values: [assignee_email || null, description, due_date, taskId],
+    };
+
+    try {
+      const { rows } = await db.query(query);
+      return rows[0];
+    } catch (error) {
+      throw new Error(`Error updating task: ${error.message}`);
+    }
+  }
+
+  static async deleteTask(taskId) {
+    const query = {
+      text: 'DELETE FROM tasks WHERE id = $1 RETURNING *',
+      values: [taskId],
+    };
+
+    try {
+      const { rows } = await db.query(query);
+      return rows[0];
+    } catch (error) {
+      throw new Error(`Error deleting task: ${error.message}`);
     }
   }
 
@@ -161,24 +226,6 @@ class TaskModel {
     }
   }
 
-  static async deleteTask(taskId, userId) {
-    const query = {
-      text: `
-        DELETE FROM tasks 
-        WHERE id = $1 
-        AND (created_by = $2 OR assigned_to = $2)
-        RETURNING *`,
-      values: [taskId, userId],
-    };
-
-    try {
-      const { rows } = await db.query(query);
-      return rows[0];
-    } catch (error) {
-      throw new Error(`Error deleting task: ${error.message}`);
-    }
-  }
-
   static async getTasksByProject(projectId) {
     const query = {
       text: `
@@ -220,6 +267,25 @@ class TaskModel {
       return rows;
     } catch (error) {
       throw new Error(`Error bulk deleting tasks: ${error.message}`);
+    }
+  }
+
+  static async updateTaskDueDate(taskId, dueDate) {
+    const query = {
+      text: `
+        UPDATE tasks 
+        SET due_date = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2 
+        RETURNING *`,
+      values: [dueDate, taskId],
+    };
+
+    try {
+      const { rows } = await db.query(query);
+      return rows[0];
+    } catch (error) {
+      throw new Error(`Error updating task due date: ${error.message}`);
     }
   }
 }

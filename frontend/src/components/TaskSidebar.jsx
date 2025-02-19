@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { FaHome, FaTasks, FaCalendar, FaSignOutAlt } from 'react-icons/fa';
 
 const TaskSidebar = ({ project }) => {
   // Hooks and context for authentication, navigation, and routing
@@ -40,7 +41,8 @@ const TaskSidebar = ({ project }) => {
     <aside className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
       {/* Home link section */}
       <div className="flex items-center mb-8">
-        <Link to="/projects" className="text-gray-500 hover:text-gray-700">
+        <Link to="/projects" className="text-gray-500 hover:text-gray-700 flex items-center">
+          <FaHome className="mr-2" />
           Home
         </Link>
       </div>
@@ -54,7 +56,17 @@ const TaskSidebar = ({ project }) => {
               to={getProjectPath('/tasks')}
               className={navLinkClass('/tasks')}
             >
+              <FaTasks className="mr-2" />
               <span>Tasks</span>
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to="/calendar"
+              className={navLinkClass('/calendar')}
+            >
+              <FaCalendar className="mr-2" />
+              <span>Calendar</span>
             </Link>
           </li>
           <li>
@@ -92,9 +104,10 @@ const TaskSidebar = ({ project }) => {
         </div>
         <button
           onClick={handleLogout}
-          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
+          className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg flex items-center"
         >
-          Logout
+          <FaSignOutAlt className="mr-2" />
+          <span>Logout</span>
         </button>
       </div>
     </aside>

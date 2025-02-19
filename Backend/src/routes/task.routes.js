@@ -12,8 +12,11 @@ router.get('/user/:userId', TaskController.getUserTasks);
 router.get('/statistics/:userId', TaskController.getTaskStatistics);
 router.patch('/:taskId/status', TaskController.updateTaskStatus);
 router.delete('/:taskId', TaskController.deleteTask);
-router.patch('/:taskId/assign', TaskController.updateTaskAssignment);
+router.patch('/:taskId', TaskController.updateTask);
 router.post('/:taskId/share', TaskController.shareTask);
 router.get('/project/:projectId', TaskController.getProjectTasks);
+
+// Update task due date
+router.patch('/:taskId/due-date', TaskController.updateTaskDueDate);
 
 module.exports = router; 

@@ -17,10 +17,7 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: 'http://localhost:3000', // Allow frontend requests
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -35,21 +32,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Mount all routes under /api
-const router = express.Router();
-
-// Mount sub-routes
-router.use('/users', userRoutes);
-router.use('/tasks', taskRoutes);
-router.use('/comments', commentRoutes);
-router.use('/ai', aiRoutes);
-router.use('/projects', projectRoutes);
-
-// Mount calendar routes at the root level of the router
-router.use('/', calendarRoutes);
-
-// Mount the main router under /api
-app.use('/api', router);
+// Mount routes
+app.use('/api', userRoutes);
+app.use('/api', taskRoutes);
+app.use('/api', commentRoutes);
+app.use('/api', aiRoutes);
+app.use('/api', projectRoutes);
+app.use('/api', calendarRoutes);
 
 const PORT = process.env.PORT || 3001;
 

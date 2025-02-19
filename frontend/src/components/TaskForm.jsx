@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import GoogleCalendarButton from './GoogleCalendarButton';
-import { FaCalendarCheck } from 'react-icons/fa';
 
 const TaskForm = ({ onClose, onTaskCreated, projectId }) => {
   const { userProfile } = useAuth();
@@ -10,12 +8,10 @@ const TaskForm = ({ onClose, onTaskCreated, projectId }) => {
     description: '',
     priority: 'MEDIUM',
     assignee_email: '',
-    due_date: '',
-    sync_with_calendar: false
+    due_date: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [calendarConnected, setCalendarConnected] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +19,6 @@ const TaskForm = ({ onClose, onTaskCreated, projectId }) => {
     setError('');
 
     try {
-      // First create the task
       const response = await fetch('http://localhost:3001/api/tasks', {
         method: 'POST',
         headers: {
@@ -43,17 +38,6 @@ const TaskForm = ({ onClose, onTaskCreated, projectId }) => {
       }
 
       const task = await response.json();
-
-      // If calendar sync is enabled, create calendar event
-      if (formData.sync_with_calendar) {
-        await fetch(`http://localhost:3001/api/tasks/${task.id}/calendar`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-      }
-
       onTaskCreated(task);
       onClose();
     } catch (error) {
@@ -135,27 +119,6 @@ const TaskForm = ({ onClose, onTaskCreated, projectId }) => {
                 onChange={handleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="sync_with_calendar"
-                  checked={formData.sync_with_calendar}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 block text-sm text-gray-700">
-                  Sync with Google Calendar
-                </label>
-              </div>
-              {formData.sync_with_calendar && (
-                <div className="flex items-center text-sm text-green-600">
-                  <FaCalendarCheck className="mr-1" />
-                  <span>Will be synced</span>
-                </div>
-              )}
             </div>
 
             {error && (

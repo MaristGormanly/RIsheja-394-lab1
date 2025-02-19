@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TaskDetailsModal from './TaskDetailsModal';
+import { format } from 'date-fns';
 
 const TaskCard = ({ task, index, isSelecting, isSelected, onSelect, onTaskDeleted }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -24,6 +25,11 @@ const TaskCard = ({ task, index, isSelecting, isSelected, onSelect, onTaskDelete
     }
   };
 
+  const formatDate = (date) => {
+    if (!date) return null;
+    return format(new Date(date), 'MMM d, yyyy');
+  };
+
   return (
     <>
       <div
@@ -41,11 +47,19 @@ const TaskCard = ({ task, index, isSelecting, isSelected, onSelect, onTaskDelete
           </div>
         )}
         <h4 className="font-medium mb-2">{task.title}</h4>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
             {task.priority}
           </span>
           <span className="text-sm text-gray-600">{task.assignee_email || 'Unassigned'}</span>
+        </div>
+        <div className="text-xs text-gray-500 space-y-1">
+          {task.created_at && (
+            <div>Created: {formatDate(task.created_at)}</div>
+          )}
+          {task.due_date && (
+            <div className="font-medium text-indigo-600">Due: {formatDate(task.due_date)}</div>
+          )}
         </div>
       </div>
 

@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import ShareTaskModal from './ShareTaskModal';
-import GoogleCalendarButton from './GoogleCalendarButton';
-import { FaCalendarCheck } from 'react-icons/fa';
 
 const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate }) => {
   const { userProfile } = useAuth();
@@ -17,10 +15,11 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
   const [error, setError] = useState('');
   const [editForm, setEditForm] = useState({
     assignee_email: task.assignee_email || '',
-    description: task.description
+    description: task.description,
+    due_date: task.due_date ? format(new Date(task.due_date), "yyyy-MM-dd'T'HH:mm") : ''
   });
   const [showShareModal, setShowShareModal] = useState(false);
-  const [calendarConnected, setCalendarConnected] = useState(!!task?.google_calendar_event_id);
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchComments();
@@ -29,6 +28,9 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
   const fetchComments = async () => {
     try {
       const response = await fetch(`http://localhost:3001/api/tasks/${task.id}/comments`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch comments');
+      }
       const data = await response.json();
       setComments(data);
     } catch (error) {
@@ -72,14 +74,15 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
     setError('');
 
     try {
-      const response = await fetch(`http://localhost:3001/api/tasks/${task.id}/assign`, {
+      const response = await fetch(`http://localhost:3001/api/tasks/${task.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           assignee_email: editForm.assignee_email || null,
-          description: editForm.description
+          description: editForm.description,
+          due_date: editForm.due_date || null
         }),
       });
 
@@ -87,6 +90,7 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
 
       const updatedTask = await response.json();
       setTask(updatedTask);
+      onUpdate?.(updatedTask);
       setIsEditing(false);
     } catch (error) {
       console.error('Error:', error);
@@ -125,11 +129,6 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
-  };
-
-  const handleCalendarDisconnect = () => {
-    setCalendarConnected(false);
-    onUpdate?.({ ...task, google_calendar_event_id: null });
   };
 
   return (
@@ -210,6 +209,17 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Due Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={editForm.due_date}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, due_date: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Assign To (Email)
                     </label>
                     <input
@@ -257,7 +267,13 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-500">Created:</span>
                         <span className="text-sm">
-                          {format(new Date(task.created_at), 'MMM d, yyyy')}
+                          {formatDate(task.created_at)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Due:</span>
+                        <span className="text-sm font-medium text-indigo-600">
+                          {task.due_date ? formatDate(task.due_date) : 'Not set'}
                         </span>
                       </div>
                     </div>
@@ -299,24 +315,6 @@ const TaskDetailsModal = ({ task: initialTask, onClose, onTaskDeleted, onUpdate 
                   <p className="text-gray-700">{formatDate(task.completed_at)}</p>
                 </div>
               )}
-            </div>
-
-            {/* Add Calendar Integration UI */}
-            <div className="flex items-center justify-between py-2 border-t border-gray-200">
-              <span className="text-sm font-medium text-gray-700">Google Calendar</span>
-              <div className="flex items-center gap-2">
-                {calendarConnected && (
-                  <span className="flex items-center text-sm text-green-600">
-                    <FaCalendarCheck className="mr-1" />
-                    Synced
-                  </span>
-                )}
-                <GoogleCalendarButton
-                  taskId={task.id}
-                  isConnected={calendarConnected}
-                  onDisconnect={handleCalendarDisconnect}
-                />
-              </div>
             </div>
           </div>
 

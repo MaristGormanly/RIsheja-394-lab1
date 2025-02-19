@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SidebarContainer from './components/SidebarContainer';
 import TaskBoard from './components/TaskBoard';
 import LoginPage from './components/auth/LoginPage';
@@ -11,8 +11,7 @@ import Reports from './components/Reports';
 import Orion from './components/Orion';
 import Projects from './components/Projects';
 import ProjectDetails from './components/ProjectDetails';
-import CalendarSetupSuccess from './components/CalendarSetupSuccess';
-import CalendarSetupError from './components/CalendarSetupError';
+import Calendar from './components/Calendar';
 
 const AppContent = () => {
   const { currentUser } = useAuth();
@@ -40,16 +39,9 @@ const AppContent = () => {
         <Route path="/signup" element={
           currentUser ? <Navigate to="/projects" /> : <SignupPage />
         } />
-        <Route path="/calendar-setup-success" element={<CalendarSetupSuccess />} />
-        <Route path="/calendar-setup-error" element={<CalendarSetupError />} />
 
         {/* Protected Routes */}
-        <Route
-          path="/"
-          element={
-            <Navigate to="/projects" />
-          }
-        />
+        <Route path="/" element={<Navigate to="/projects" />} />
         <Route
           path="/projects"
           element={
@@ -63,6 +55,14 @@ const AppContent = () => {
           element={
             <PrivateRoute>
               <TaskBoard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/calendar"
+          element={
+            <PrivateRoute>
+              <Calendar />
             </PrivateRoute>
           }
         />

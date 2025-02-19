@@ -33,7 +33,7 @@ const handleCallback = async (req, res) => {
   
   if (!code) {
     console.error('No code received from Google');
-    return res.redirect(`${process.env.FRONTEND_URL}/calendar-setup-error`);
+    return res.redirect(`${process.env.FRONTEND_URL}/#/calendar-setup-error`);
   }
 
   try {
@@ -53,7 +53,7 @@ const handleCallback = async (req, res) => {
     
     if (userResult.rows.length === 0) {
       console.error('User not found:', userInfo.data.email);
-      return res.redirect(`${process.env.FRONTEND_URL}/calendar-setup-error`);
+      return res.redirect(`${process.env.FRONTEND_URL}/#/calendar-setup-error`);
     }
 
     const userId = userResult.rows[0].id;
@@ -65,10 +65,10 @@ const handleCallback = async (req, res) => {
     );
     
     console.log('Redirecting to success page');
-    res.redirect(`${process.env.FRONTEND_URL}/calendar-setup-success`);
+    res.redirect(`${process.env.FRONTEND_URL}/#/calendar-setup-success`);
   } catch (error) {
     console.error('Error handling Google callback:', error);
-    res.redirect(`${process.env.FRONTEND_URL}/calendar-setup-error`);
+    res.redirect(`${process.env.FRONTEND_URL}/#/calendar-setup-error`);
   }
 };
 
