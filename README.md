@@ -16,7 +16,7 @@ This project is an intelligent task management system that leverages OpenAI's GP
 
 - Backend: Node.js
 - AI Integration: OpenAI GPT-4
-- Database: MongoDB (implied by the model structure)
+- Database: Postgres database
 - API: RESTful architecture
 
 ## Task Structure
@@ -67,7 +67,7 @@ Response:
 
 1. Node.js environment
 2. OpenAI API key
-3. Postgres database
+3. Postgres database setup
 4. Required environment variables:
    - OpenAI API configuration
    - Database connection string
