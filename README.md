@@ -67,7 +67,7 @@ Response:
 
 1. Node.js environment
 2. OpenAI API key
-3. MongoDB database
+3. Postgres database
 4. Required environment variables:
    - OpenAI API configuration
    - Database connection string
