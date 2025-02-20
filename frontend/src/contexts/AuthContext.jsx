@@ -45,9 +45,12 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
+      console.log('Attempting login for email:', email);
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Firebase login successful:', userCredential.user);
       return userCredential.user;
     } catch (error) {
+      console.error('Login error:', error);
       throw error;
     }
   };
@@ -61,20 +64,26 @@ export const AuthProvider = ({ children }) => {
   // Fetch user profile from database
   const fetchUserProfile = async (email) => {
     try {
+      console.log('Fetching user profile for email:', email);
       const userData = await getUserData(email);
+      console.log('User profile fetched:', userData);
       setUserProfile(userData);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      setUserProfile(null);
     }
   };
 
   // Set up auth state observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed. Current user:', user);
       setCurrentUser(user);
       if (user) {
+        console.log('Fetching user profile for authenticated user:', user.email);
         await fetchUserProfile(user.email);
       } else {
+        console.log('No authenticated user, clearing user profile');
         setUserProfile(null);
       }
       setLoading(false);

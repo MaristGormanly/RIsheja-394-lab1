@@ -15,32 +15,23 @@ const TaskBoard = () => {
   const location = useLocation();
   const urlProjectId = projectId || searchParams.get('projectId');
   
-  const { tasks, setTasks } = useTask();
+  const { tasks, setTasks, loading } = useTask();
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showShareProject, setShowShareProject] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [urlProjectId, userProfile]);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
   const fetchTasks = async () => {
     try {
-      let response;
-      
-      if (urlProjectId) {
-        // Fetch project-specific tasks
-        response = await fetch(`http://localhost:3001/api/tasks/project/${urlProjectId}`);
-      } else {
-        // Fetch user's tasks
-        response = await fetch(`http://localhost:3001/api/tasks/user/${userProfile.id}`);
-      }
+      // Always fetch user's tasks if no project ID is specified
+      const response = await fetch(`http://localhost:3001/api/tasks/user/${userProfile.id}`);
 
       if (!response.ok) throw new Error('Failed to fetch tasks');
       const tasksData = await response.json();
+      
+      console.log('Fetched tasks:', tasksData); // Debug log
       
       // Group tasks by status
       const groupedTasks = {
@@ -50,18 +41,40 @@ const TaskBoard = () => {
       };
 
       tasksData.forEach(task => {
+        // For project view, only include tasks from this project
+        if (urlProjectId && task.project_id !== parseInt(urlProjectId)) {
+          return;
+        }
         if (groupedTasks[task.status]) {
           groupedTasks[task.status].push(task);
         }
       });
 
+      console.log('Grouped tasks:', groupedTasks); // Debug log
       setTasks(groupedTasks);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching tasks:', error);
-      setLoading(false);
     }
   };
+
+  // Initial fetch
+  useEffect(() => {
+    if (userProfile?.id) {
+      console.log('Fetching tasks for user:', userProfile.id); // Debug log
+      fetchTasks();
+    }
+  }, [userProfile?.id, urlProjectId]);
+
+  // Auto-refresh
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (userProfile?.id) {
+        fetchTasks();
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [userProfile?.id, urlProjectId]);
 
   const handleTaskCreated = (newTask) => {
     setTasks(prev => ({
@@ -188,7 +201,11 @@ const TaskBoard = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-lg text-gray-600">Loading tasks...</div>
+      </div>
+    );
   }
 
   return (
@@ -223,12 +240,12 @@ const TaskBoard = () => {
       </div>
       
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-6 flex-1 min-h-0">
+        <div className="flex gap-6 flex-1 min-h-0 overflow-x-auto overflow-y-hidden" style={{ height: 'calc(100vh - 12rem)' }}>
           {Object.entries(tasks).map(([status, taskList]) => (
             <TaskColumn 
               key={status} 
               title={status.replace('_', ' ')} 
-              tasks={taskList} 
+              tasks={taskList || []} 
               droppableId={status}
               selectedTasks={selectedTasks}
               onTaskSelect={handleTaskSelect}
@@ -256,6 +273,7 @@ const TaskBoard = () => {
 
       {showShareProject && (
         <ShareProjectModal
+          projectId={urlProjectId}
           onClose={() => setShowShareProject(false)}
         />
       )}

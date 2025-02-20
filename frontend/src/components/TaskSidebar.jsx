@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, Link, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FaHome, FaTasks, FaCalendar, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaTasks, FaCalendar, FaSignOutAlt, FaChartBar, FaRobot, FaFileAlt } from 'react-icons/fa';
 
 const TaskSidebar = ({ project }) => {
   // Hooks and context for authentication, navigation, and routing
@@ -53,8 +53,8 @@ const TaskSidebar = ({ project }) => {
           {/* Navigation items including new Tasks link */}
           <li>
             <Link 
-              to={getProjectPath('/tasks')}
-              className={navLinkClass('/tasks')}
+              to={projectId ? `/projects/${projectId}` : '/projects'}
+              className={navLinkClass(projectId ? `/projects/${projectId}` : '/projects')}
             >
               <FaTasks className="mr-2" />
               <span>Tasks</span>
@@ -62,7 +62,7 @@ const TaskSidebar = ({ project }) => {
           </li>
           <li>
             <Link 
-              to="/calendar"
+              to={projectId ? `/projects/${projectId}/calendar` : '/calendar'}
               className={navLinkClass('/calendar')}
             >
               <FaCalendar className="mr-2" />
@@ -71,25 +71,28 @@ const TaskSidebar = ({ project }) => {
           </li>
           <li>
             <Link 
-              to={getProjectPath('/statistics')}
-              className={navLinkClass('/statistics')}
+              to={projectId ? `/projects/${projectId}/statistics` : '/statistics'}
+              className={navLinkClass(projectId ? `/projects/${projectId}/statistics` : '/statistics')}
             >
+              <FaChartBar className="mr-2" />
               <span>Statistics</span>
             </Link>
           </li>
           <li>
             <Link 
-              to={getProjectPath('/orion')}
-              className={navLinkClass('/orion')}
+              to={projectId ? `/projects/${projectId}/orion` : '/orion'}
+              className={navLinkClass(projectId ? `/projects/${projectId}/orion` : '/orion')}
             >
+              <FaRobot className="mr-2" />
               <span>Orion AI</span>
             </Link>
           </li>
           <li>
             <Link 
-              to={getProjectPath('/reports')}
-              className={navLinkClass('/reports')}
+              to={projectId ? `/projects/${projectId}/reports` : '/reports'}
+              className={navLinkClass(projectId ? `/projects/${projectId}/reports` : '/reports')}
             >
+              <FaFileAlt className="mr-2" />
               <span>Reports</span>
             </Link>
           </li>

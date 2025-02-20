@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
 const TaskContext = createContext();
@@ -14,16 +14,26 @@ export const TaskProvider = ({ children }) => {
     'IN_PROGRESS': [],
     'COMPLETED': []
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const fetchTasks = async () => {
-    if (!userProfile?.id) return;
+  const fetchTasks = useCallback(async (userId = userProfile?.id) => {
+    if (!userId) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/tasks/user/${userProfile.id}`);
+      setLoading(true);
+      setError(null);
+      
+      console.log('TaskContext: Fetching tasks for user:', userId); // Debug log
+      
+      const response = await fetch(`http://localhost:3001/api/tasks/user/${userId}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
+
       const fetchedTasks = await response.json();
+      console.log('TaskContext: Received tasks:', fetchedTasks); // Debug log
       
       // Group tasks by status
       const groupedTasks = {
@@ -38,20 +48,55 @@ export const TaskProvider = ({ children }) => {
         }
       });
 
+      console.log('TaskContext: Grouped tasks:', groupedTasks); // Debug log
       setTasks(groupedTasks);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error('TaskContext: Error fetching tasks:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [userProfile?.id]);
 
+  // Initial fetch when user profile is loaded
   useEffect(() => {
-    fetchTasks();
-  }, [userProfile]);
+    if (userProfile?.id) {
+      console.log('TaskContext: Initial fetch for user:', userProfile.id); // Debug log
+      fetchTasks(userProfile.id);
+    }
+  }, [userProfile?.id, fetchTasks]);
+
+  const addTask = useCallback((newTask) => {
+    console.log('TaskContext: Adding new task:', newTask); // Debug log
+    setTasks(prev => {
+      const newTasks = { ...prev };
+      newTasks[newTask.status] = [...(prev[newTask.status] || []), newTask];
+      return newTasks;
+    });
+  }, []);
+
+  const updateTask = useCallback((taskId, updatedTask) => {
+    console.log('TaskContext: Updating task:', taskId, updatedTask); // Debug log
+    setTasks(prev => {
+      const newTasks = { ...prev };
+      // Remove from all status arrays
+      Object.keys(newTasks).forEach(status => {
+        newTasks[status] = newTasks[status].filter(task => task.id !== taskId);
+      });
+      // Add to correct status array
+      newTasks[updatedTask.status] = [...(newTasks[updatedTask.status] || []), updatedTask];
+      return newTasks;
+    });
+  }, []);
 
   const value = {
     tasks,
     setTasks,
-    fetchTasks
+    loading,
+    error,
+    fetchTasks,
+    addTask,
+    updateTask
   };
 
   return (
@@ -59,4 +104,6 @@ export const TaskProvider = ({ children }) => {
       {children}
     </TaskContext.Provider>
   );
-}; 
+};
+
+export default TaskProvider; 

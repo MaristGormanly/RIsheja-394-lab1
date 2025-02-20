@@ -53,9 +53,7 @@ const AppContent = () => {
         <Route
           path="/tasks"
           element={
-            <PrivateRoute>
-              <TaskBoard />
-            </PrivateRoute>
+            <Navigate to="/projects" />
           }
         />
         <Route
@@ -94,7 +92,39 @@ const AppContent = () => {
           path="/projects/:projectId"
           element={
             <PrivateRoute>
-              <TaskBoard />
+              <ProjectDetails />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId/calendar"
+          element={
+            <PrivateRoute>
+              <Calendar />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId/statistics"
+          element={
+            <PrivateRoute>
+              <Statistics />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports"
+          element={
+            <PrivateRoute>
+              <Reports />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId/orion"
+          element={
+            <PrivateRoute>
+              <Orion />
             </PrivateRoute>
           }
         />

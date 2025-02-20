@@ -9,7 +9,7 @@ const ShareProjectModal = ({ onClose, projectId }) => {
   const [success, setSuccess] = useState('');
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   
-  const shareLink = window.location.href;
+  const shareLink = `${window.location.origin}/projects/${projectId}`;
 
   const handleShare = async (e) => {
     e.preventDefault();

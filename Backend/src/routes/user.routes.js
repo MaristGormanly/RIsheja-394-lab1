@@ -7,12 +7,15 @@ const UserModel = require('../models/user.model');
 router.post('/', async (req, res) => {
   try {
     const { email, name } = req.body;
+    console.log('Creating new user:', { email, name });
     
     if (!email || !name) {
+      console.log('Missing required fields:', { email, name });
       return res.status(400).json({ message: 'Email and name are required' });
     }
 
     const user = await UserModel.createUser(email, name);
+    console.log('User created successfully:', user);
     res.status(201).json(user);
   } catch (error) {
     console.error('Error creating user:', error);
@@ -27,11 +30,14 @@ router.get('/email/:email', async (req, res) => {
     console.log('Looking up user by email:', email);
     
     const user = await UserModel.getUserByEmail(email);
+    console.log('User lookup result:', user ? 'User found' : 'User not found');
     
     if (!user) {
+      console.log('User not found for email:', email);
       return res.status(404).json({ message: 'User not found' });
     }
     
+    console.log('Returning user data for email:', email);
     res.json(user);
   } catch (error) {
     console.error('Error fetching user by email:', error);

@@ -103,9 +103,19 @@ class TaskController {
     try {
       const { tasks } = req.body;
       
-      const createdTasks = await Promise.all(
-        tasks.map(task => TaskModel.createTask(task))
-      );
+      if (!Array.isArray(tasks) || tasks.length === 0) {
+        return res.status(400).json({ message: 'No tasks provided' });
+      }
+
+      // Create tasks in sequence to maintain order
+      const createdTasks = [];
+      for (const task of tasks) {
+        const createdTask = await TaskModel.createTask({
+          ...task,
+          status: 'TO_DO'  // Ensure status is set
+        });
+        createdTasks.push(createdTask);
+      }
 
       res.status(201).json(createdTasks);
     } catch (error) {

@@ -27,7 +27,7 @@ const TaskPreview = ({ task, onConfirm, onCancel }) => {
 
 const Orion = () => {
   const { userProfile } = useAuth();
-  const { setTasks, fetchTasks } = useTask();
+  const { addTask, fetchTasks } = useTask();
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -58,7 +58,8 @@ const Orion = () => {
         body: JSON.stringify({
           tasks: generatedTasks.map(task => ({
             ...task,
-            creator_email: userProfile.email
+            creator_email: userProfile.email,
+            status: 'TO_DO'  // Ensure status is set
           }))
         }),
       });
@@ -67,8 +68,15 @@ const Orion = () => {
         throw new Error('Failed to create tasks');
       }
 
+      const createdTasks = await response.json();
+      
+      // Add each task to the context
+      createdTasks.forEach(task => {
+        addTask(task);
+      });
+
       // Fetch all tasks to ensure consistency
-      await fetchTasks();
+      await fetchTasks(userProfile.id);
 
       setMessages(prev => [...prev, {
         role: 'assistant',

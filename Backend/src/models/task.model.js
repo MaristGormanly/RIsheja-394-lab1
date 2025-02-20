@@ -84,12 +84,12 @@ class TaskModel {
           )
         )
         ORDER BY 
+          t.created_at DESC,
           CASE 
             WHEN t.due_date IS NOT NULL THEN 0 
             ELSE 1 
           END,
-          t.due_date ASC NULLS LAST,
-          t.created_at DESC`,
+          t.due_date ASC NULLS LAST`,
       values: [userId],
     };
 
@@ -105,10 +105,10 @@ class TaskModel {
     const query = {
       text: `
         UPDATE tasks 
-        SET status = $1, 
+        SET status = $1::varchar, 
             updated_at = CURRENT_TIMESTAMP,
             completed_at = CASE 
-              WHEN $1 = 'COMPLETED' THEN CURRENT_TIMESTAMP
+              WHEN $1::varchar = 'COMPLETED' THEN CURRENT_TIMESTAMP
               ELSE NULL
             END
         WHERE id = $2 
@@ -118,6 +118,9 @@ class TaskModel {
 
     try {
       const { rows } = await db.query(query);
+      if (!rows[0]) {
+        throw new Error('Task not found');
+      }
       return rows[0];
     } catch (error) {
       throw new Error(`Error updating task status: ${error.message}`);

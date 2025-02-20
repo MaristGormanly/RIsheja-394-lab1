@@ -24,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // Debug middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
+  console.log('Request headers:', req.headers);
   next();
 });
 
@@ -33,19 +34,19 @@ app.get('/health', (req, res) => {
 });
 
 // Mount routes
-app.use('/api', userRoutes);
-app.use('/api', taskRoutes);
-app.use('/api', commentRoutes);
-app.use('/api', aiRoutes);
-app.use('/api', projectRoutes);
-app.use('/api', calendarRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 const PORT = process.env.PORT || 3001;
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ message: err.message || 'Something went wrong!' });
 });
 
 app.listen(PORT, () => {

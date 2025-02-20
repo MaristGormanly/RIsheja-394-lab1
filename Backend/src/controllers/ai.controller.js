@@ -6,6 +6,12 @@ class AIController {
     try {
       const { projectDescription, userId } = req.body;
 
+      if (!projectDescription || !userId) {
+        return res.status(400).json({ 
+          message: 'Project description and user ID are required' 
+        });
+      }
+
       const systemPrompt = `You are a project planning assistant. When given a project description, create a list of specific, actionable tasks in JSON format. Each task must have these exact fields:
 - title (string): A clear, concise task name
 - description (string): Detailed explanation of what needs to be done
@@ -27,16 +33,20 @@ Example response format:
 }`;
 
       const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo",
+        model: "gpt-4-0125-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: projectDescription }
         ],
-        temperature: 0.3,
-        max_tokens: 800,
-        top_p: 0.9,
+        temperature: 0.7,
+        max_tokens: 1500,
+        top_p: 1,
         response_format: { type: "json_object" }
       });
+
+      if (!completion.choices || !completion.choices[0] || !completion.choices[0].message) {
+        throw new Error('Invalid response from OpenAI');
+      }
 
       let tasksData;
       try {
@@ -58,7 +68,7 @@ Example response format:
 
       } catch (parseError) {
         console.error('Parse error:', parseError);
-        throw new Error('Failed to parse AI response');
+        throw new Error('Failed to parse AI response. Please try again with a more detailed description.');
       }
 
       // Create tasks in database
@@ -77,7 +87,9 @@ Example response format:
       });
     } catch (error) {
       console.error('Error in generateTasks:', error);
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ 
+        message: error.message || 'Failed to generate tasks. Please try again.' 
+      });
     }
   }
 }

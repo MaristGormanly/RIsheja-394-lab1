@@ -17,7 +17,7 @@ const TaskColumn = ({ title, tasks, droppableId, onTaskSelect, selectedTasks, on
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-100 rounded-lg p-4 min-h-[200px] max-h-[calc(100vh-12rem)] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-gray-100 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-gray-900">{title}</h3>
@@ -48,7 +48,7 @@ const TaskColumn = ({ title, tasks, droppableId, onTaskSelect, selectedTasks, on
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 overflow-y-auto scrollbar-hide space-y-4 ${
+            className={`flex-1 space-y-4 ${
               snapshot.isDraggingOver ? 'bg-gray-200' : ''
             }`}
           >
