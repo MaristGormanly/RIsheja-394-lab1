@@ -1,0 +1,11 @@
+Initial prompt(Backend setup): I want to make a task management web application for now i want to build the backend side of the project. 
+I need help building the backend of my project using Node.js with Express. I have already set up the database using 
+PostgreSQL, here is the database schema@taskflow.sql  and now want to establish a connection between the backend and the 
+database. I also need to create APIs and structure the backend into three parts: routes, controllers, and models. Can you guide 
+me through setting up the project, best practices for structuring the code, and handling database queries efficiently?
+
+Initial prompt(Frontend setup): a front end side, i have a ui design attached and we should try to make it look like it as much as we can, 
+in addition im thinking using using react and tailwing css. we should have a separation of the front end and the backend side in different 
+folders, i already created both the backend folder and the frontend one, additionally use the best practises for react and tailwind css as 
+a proffesional software developer.
+

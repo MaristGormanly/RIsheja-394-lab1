@@ -1,0 +1,17 @@
+Debbuging prompts: 1. im getting this error feedback and im abit confused on what it means, lets go step by step to debug this issue:
+Answer: The error ECONNREFUSED indicates that your application is unable to connect to the PostgreSQL database. This usually happens for a few common reasons:
+PostgreSQL server might not be running
+The port number in your .env file doesn't match your PostgreSQL server's port
+Incorrect credentials in the .env file
+Let's fix this:
+First, verify that PostgreSQL is running on your machine. You can do this by:
+On Windows: Check Services app for "PostgreSQL"
+On Mac/Linux: Run ps aux | grep postgres
+The standard PostgreSQL port is 5432, but your .env file shows 5435. Let's modify the .env file.
+// the problem was the port number in the .env file
+
+2. 
+
+
+
+
